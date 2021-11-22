@@ -1,0 +1,33 @@
+Vineet Kumar, sioom.ai
+
+This input file has user-settable hyper-parameters for loading a checkpoint model
+   and testing it.
+
+Note the following:
+	(1) This file name should be last in the command-line.
+	(2) Do NOT change the order of python-dictionaries in this file.
+	(3) The default directory is "classification"
+ 
+Command-line:
+-------------
+python3 Main.py input_param_files/bert_seq_class-test_only 
+
+
+parameters for python-dictionary #0
+-
+{'no_training': True, 'statistics': True, 'chkpt': 'tensorboard_logs/model_type=bert_seqClassification_large_uncased,tokenizer_type=bert/version_21/checkpoints/batch=10,optz=Adam,lr=2e-05,lr_sched=ReduceLROnPlateau,mode=min,patience=1,factor=0.1,epoch=02-val_loss=0.39129.ckpt'}
+
+
+parameters for python-dictionary #1
+- 
+{}
+
+parameters for python-dictionary #2
+- 
+{'default_format_path': 'data/customer_chat_sample.csv', 'batch_size': 10, 'split': {'train': 0, 'val': 0, 'test': 100}} 
+
+
+parameters for python-dictionary #3
+- 
+{'gpus': 1}
+
