@@ -36,15 +36,16 @@ parameters for python-dictionary 'data'
 parameters for python-dictionary 'trainer'
 - 
 #{}
-{'gpus': 1, 'max_epochs': 2}
+{'gpus': 1, 'max_epochs': 6}
 
 
 parameters for python-dictionary 'model_init'. Contents of this dict are replaced by corresponding checkpoint dict 
 - 
-{}
+#{}
+{'model_type': 'bert'}
 #{'model_type': 'bert_large_uncased', 'tokenizer_type': 'bert'}
 
 
 parameters for python-dictionary 'ld_resume_chkpt'
 - 
-{'resume_from_checkpoint': 'tensorboard_logs/model_type=bert_large_uncased,tokenizer_type=bert/version_380/checkpoints/last.ckpt'}
+{'resume_from_checkpoint': 'tensorboard_logs/model_type=bert_large_uncased,tokenizer_type=bert/version_0/version_1/checkpoints/last.ckpt'}
