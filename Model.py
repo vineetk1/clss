@@ -54,6 +54,7 @@ class Model(LightningModule):
     def params(self, optz_sched_params, app_specific):
         self.app_specific = app_specific
         self.optz_sched_params = optz_sched_params
+        # Trainer('auto_lr_find': True...) requires self.lr
         self.lr = self.optz_sched_params['optz_params'][
             'lr'] if 'lr' in self.optz_sched_params['optz_params'] else None
 
