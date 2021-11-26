@@ -16,24 +16,26 @@ logg = getLogger(__name__)
 class Data(LightningDataModule):
     def __init__(self, d_params: dict):
         super().__init__()
+        if 'batch_size' not in d_params:
+            logg.critical('"batch_size" MUST be specified')
+            exit()
+        for batch_size_key in ('train', 'val', 'test'):
+            if batch_size_key not in d_params['batch_size'] or d_params[
+                    'batch_size'][batch_size_key] is None or d_params[
+                        'batch_size'][batch_size_key] == 0:
+                d_params['batch_size'][batch_size_key] = 1
         # Trainer('auto_scale_batch_size': True...) requires self.batch_size
-        self.batch_size = d_params['batch_size'] if d_params[
-            'batch_size'] else 2
-        '''
-        if d_params['batch_size']:
-            self.batch_size = d_params['batch_size']
-        else:
-            self.batch_size = 2
-        '''
+        self.batch_size = d_params['batch_size']['train']
         self.d_params = d_params
 
     def prepare_data(self,
                      no_training: bool = False,
                      no_testing: bool = False):
-        self.dataset_metadata, train_data, val_data, test_data = get_trainValTest_data(
-            self.d_params['default_format_path'],
-            batch_size=self.batch_size,
-            split=self.d_params['dataset_split'])
+        self.dataset_metadata, train_data, val_data, test_data =\
+            _get_trainValTest_data(
+             data_file_path=self.d_params['default_format_path'],
+             batch_size=self.d_params['batch_size'],
+             split=self.d_params['dataset_split'])
         if not no_training:
             self.train_data = Dataset(train_data)
             self.valid_data = Dataset(val_data)
@@ -41,6 +43,13 @@ class Data(LightningDataModule):
             self.test_data = Dataset(test_data)
         if no_training and no_testing:
             logg.info('No Training and no Testing')
+
+    @staticmethod
+    def app_specific_params() -> Tuple[Dict, Dict]:
+        app_specific_init, app_specific = {}, {}
+        app_specific_init['num_classes'] = 8
+        app_specific['num_classes'] = 8
+        return app_specific_init, app_specific
 
     def get_dataset_metadata(self) -> Dict[str, Any]:
         return self.dataset_metadata
@@ -62,7 +71,7 @@ class Data(LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(self.valid_data,
-                          batch_size=self.batch_size,
+                          batch_size=self.d_params['batch_size']['val'],
                           shuffle=False,
                           sampler=RandomSampler(self.valid_data),
                           batch_sampler=None,
@@ -74,7 +83,7 @@ class Data(LightningDataModule):
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(self.test_data,
-                          batch_size=self.batch_size,
+                          batch_size=self.d_params['batch_size']['test'],
                           shuffle=False,
                           sampler=RandomSampler(self.test_data),
                           batch_sampler=None,
@@ -128,9 +137,9 @@ class Dataset(Dataset):
         return (self.examples[idx])
 
 
-def get_trainValTest_data(
-        data_file_path: str, batch_size: int,
-        split: Dict) -> Tuple[Dict[str, Any], List[Dict[str, str]]]:
+def _get_trainValTest_data(
+        data_file_path: str, batch_size: Dict[str, int],
+        split: Dict[str, int]) -> Tuple[Dict[str, Any], List[Dict[str, str]]]:
     assert split['train'] + split['val'] + split['test']
 
     df = pd.read_csv(data_file_path)
