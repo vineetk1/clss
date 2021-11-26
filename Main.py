@@ -96,10 +96,7 @@ def main():
                       user_dicts['app_specific_init'])
         model.params(user_dicts['optz_sched'], user_dicts['app_specific'])
     else:
-        app_specific_init = {}  # parameters for initializing Model class
-        app_specific = {}  # parameters needed throughout Model class
-        app_specific_init['num_classes'] = 8
-        app_specific['num_classes'] = 8
+        app_specific_init, app_specific = Data.app_specific_params()
         user_dicts['app_specific_init'] = app_specific_init
         user_dicts['app_specific'] = app_specific
         model = Model(user_dicts['model_init'],
@@ -131,8 +128,6 @@ def main():
             and user_dicts['misc']['no_training']):
         # Training: True, Testing: Don't care
         ckpt_filename = ""
-        if 'batch_size' in user_dicts['data']:
-            ckpt_filename += f'batch={user_dicts["data"]["batch_size"]},'
         for item in user_dicts['optz_sched']:
             if isinstance(user_dicts['optz_sched'][item], str):
                 ckpt_filename += f'{item}={user_dicts["optz_sched"][item]},'
@@ -188,7 +183,7 @@ def main():
                 and user_dicts['misc']['no_testing']):
             if 'statistics' in user_dicts['misc'] and user_dicts['misc'][
                     'statistics']:
-                model.set_statistics(dataset_metadata)
+                model.set_statistics(dataset_metadata, dirPath)
             trainer.test()  # auto loads checkpoint file with lowest val loss
             model.clear_statistics()
     elif not ('no_testing' in user_dicts['misc']
@@ -196,7 +191,7 @@ def main():
         # Training: False, Testing: True
         if 'statistics' in user_dicts['misc'] and user_dicts['misc'][
                 'statistics']:
-            model.set_statistics(dataset_metadata)
+            model.set_statistics(dataset_metadata, dirPath)
         trainer.test(model, test_dataloaders=data.test_dataloader())
         model.clear_statistics()
     else:
