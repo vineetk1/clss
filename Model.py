@@ -66,7 +66,7 @@ class Model(LightningModule):
 
     def training_step(self, batch: Dict[str, Any],
                       batch_idx: int) -> torch.Tensor:
-        loss, _ = self.run_model(batch)
+        loss, _ = self._run_model(batch)
         # logger=True => TensorBoard; x-axis is always in steps=batches
         self.log('train_loss',
                  loss,
@@ -87,7 +87,7 @@ class Model(LightningModule):
 
     def validation_step(self, batch: Dict[str, Any],
                         batch_idx: int) -> torch.Tensor:
-        loss, _ = self.run_model(batch)
+        loss, _ = self._run_model(batch)
         # checkpoint-callback monitors epoch val_loss, so on_epoch=True
         self.log('val_loss',
                  loss,
@@ -104,7 +104,7 @@ class Model(LightningModule):
                                           self.current_epoch)
 
     def test_step(self, batch: Dict[str, Any], batch_idx: int) -> torch.Tensor:
-        loss, logits = self.run_model(batch)
+        loss, logits = self._run_model(batch)
         # checkpoint-callback monitors epoch val_loss, so on_epoch=True
         self.log('test_loss_step',
                  loss,
@@ -114,7 +114,7 @@ class Model(LightningModule):
                  logger=True)
         try:
             if self.statistics:
-                self.statistics_step(example_ids=batch['sentence_ids'],
+                self._statistics_step(example_ids=batch['sentence_ids'],
                                      predictions=torch.argmax(logits, dim=1),
                                      actuals=batch['labels'].squeeze(1))
         except AttributeError:
@@ -128,11 +128,11 @@ class Model(LightningModule):
                                           self.current_epoch)
         try:
             if self.statistics:
-                self.statistics_end()
+                self._statistics_end()
         except AttributeError:
             pass
 
-    def run_model(self, batch: Dict[str, Any]) -> torch.Tensor:
+    def _run_model(self, batch: Dict[str, Any]) -> torch.Tensor:
         outputs = self.model(**batch['model_inputs'])
         pooled_output = outputs[1]
         pooled_output = self.classification_head_dropout(pooled_output)
@@ -202,19 +202,20 @@ class Model(LightningModule):
     def clear_statistics(self):
         self.statistics = False
 
-    def set_statistics(self, dataset_meta):
+    def set_statistics(self, dataset_meta, dirPath: str):
         self.statistics = True
         self.dataset_meta = dataset_meta
+        self.dirPath = dirPath
         num_classes = len(dataset_meta['class_info']['names'])
         self.confusion_matrix = torch.zeros(num_classes,
                                             num_classes,
                                             dtype=torch.int64)
 
-    def statistics_step(self, example_ids, predictions, actuals):
+    def _statistics_step(self, example_ids, predictions, actuals):
         for prediction, actual in zip(predictions, actuals):
             self.confusion_matrix[prediction, actual] += 1
 
-    def statistics_end(self):
+    def _statistics_end(self):
         assert self.confusion_matrix.shape[0] == self.confusion_matrix.shape[1]
         epsilon = 1E-9
         precision = self.confusion_matrix.diag() / (
@@ -225,42 +226,67 @@ class Model(LightningModule):
         f1_avg = f1.sum() / f1.shape[0]
         test_classes_lengths = torch.LongTensor(
             list(self.dataset_meta["class_info"]["test_lengths"].values()))
-        f1_wgt = ((f1 * test_classes_lengths) /
-                  test_classes_lengths.sum()).sum()
+        f1_wgt = (
+            (f1 * test_classes_lengths).sum()) / test_classes_lengths.sum()
 
-        print('\n\nAbout Dataset: original, train, validation, test')
-        print(f'Split: N/A, {self.dataset_meta["dataset_info"]["split"]}')
-        print(f'Lengths: {self.dataset_meta["dataset_info"]["lengths"]}')
-        print(f'Batch_size: {self.dataset_meta["batch_size"]}')
-        print(
-            f'Steps per epoch: {[len/self.dataset_meta["batch_size"] for len in self.dataset_meta["dataset_info"]["lengths"]]}'
-        )
+        from sys import stdout
+        from contextlib import redirect_stdout
+        from pathlib import Path
+        stdoutput = Path('/dev/null')
+        test_results = self.dirPath.joinpath('test-results.txt')
+        test_results.touch(exist_ok=False)
+        for out in (stdoutput, test_results):
+            with out.open("w") as results_file:
+                with redirect_stdout(stdout if out ==
+                                     stdoutput else results_file):
+                    print('About Dataset: original, train, validation, test')
+                    print(
+                        f' Split: N/A, {self.dataset_meta["dataset_info"]["split"]}'
+                    )
+                    print(
+                        f' Lengths: {self.dataset_meta["dataset_info"]["lengths"]}'
+                    )
+                    print(
+                        f' Batch_sizes: N/A, {tuple(self.dataset_meta["batch_size"].values())}'
+                    )
+                    print(' Steps per epoch: N/A,', end="")
+                    for len, batch_size in zip(
+                            self.dataset_meta["dataset_info"]["lengths"][1:],
+                            self.dataset_meta["batch_size"].values()):
+                        print(f'{len/batch_size: .2f}', end="")
 
-        print('\nAbout Class distribution: original, train, validation, test')
-        for prop in ['dataset_prop', 'train_prop', 'val_prop', 'test_prop']:
-            if not self.dataset_meta["class_info"][prop]:
-                print(' 0', end="")
-            else:
-                for num in list(
-                        self.dataset_meta["class_info"][prop].values()):
-                    print(f'{num: .4f}  ', end="")
-            print('\n')
+                    print(
+                        '\n\nAbout Class distribution: original, train, validation, test'
+                    )
+                    for prop in [
+                            'dataset_prop', 'train_prop', 'val_prop',
+                            'test_prop'
+                    ]:
+                        if not self.dataset_meta["class_info"][prop]:
+                            print(' 0', end="")
+                        else:
+                            for num in list(self.dataset_meta["class_info"]
+                                            [prop].values()):
+                                print(f'{num: .4f}  ', end="")
+                        print('\n')
 
-        print('About Test dataset:')
-        for class_num, class_name in enumerate(
-                self.dataset_meta['class_info']['names']):
-            strng = (
-                f'Class {class_num}, {class_name}, '
-                f'{self.dataset_meta["class_info"]["test_lengths"][class_name]}'
-                f' examples, '
-                f'{self.dataset_meta["class_info"]["test_prop"][class_name]: .4f}'
-                f' distribution')
-            print(strng)
+                    print('About Test dataset:')
+                    for class_num, class_name in enumerate(
+                            self.dataset_meta['class_info']['names']):
+                        strng = (
+                            f' Class {class_num}, {class_name}, '
+                            f'{self.dataset_meta["class_info"]["test_lengths"][class_name]}'
+                            f' examples, '
+                            f'{self.dataset_meta["class_info"]["test_prop"][class_name]: .4f}'
+                            f' distribution')
+                        print(strng)
 
-        print('\nconfusion matrix (prediction (rows) vs. actual (columns))=\n')
-        print(f'{self.confusion_matrix}')
-        print(f'precision = {precision}')
-        print(f'recall = {recall}')
-        print(f'F1 = {f1}')
-        print(f'Average F1 = {f1_avg: .4f}')
-        print(f'Weighted F1 = {f1_wgt: .4f}')
+                    print(
+                        '\nConfusion matrix (prediction (rows) vs. actual (columns))='
+                    )
+                    print(f'{self.confusion_matrix}')
+                    print(f'Precision = {precision}')
+                    print(f'Recall = {recall}')
+                    print(f'F1 = {f1}')
+                    print(f'Average F1 = {f1_avg: .4f}')
+                    print(f'Weighted F1 = {f1_wgt: .4f}')
