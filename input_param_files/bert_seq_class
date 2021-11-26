@@ -26,7 +26,7 @@ parameters for python-dictionary 'optz_sched'
 
 parameters for python-dictionary 'data'
 - 
-{'default_format_path': 'data/customer_chat_sample.csv', 'batch_size': 10, 'dataset_split': {'train': 80, 'val': 10, 'test': 10}} 
+{'default_format_path': 'data/customer_chat_sample.csv', 'batch_size': {'train': 10, 'val': 10, 'test': 10}, 'dataset_split': {'train': 80, 'val': 10, 'test': 10}} 
 
 
 parameters for python-dictionary 'trainer'
