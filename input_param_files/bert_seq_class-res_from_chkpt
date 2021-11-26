@@ -24,28 +24,25 @@ parameters for python-dictionary 'misc'
 
 parameters for python-dictionary 'optz_sched'. Contents of this dict are replaced by corresponding checkpoint dict 
 - 
-#{'optz': 'Adam', 'optz_params': {'lr': 2e-5}, 'lr_sched': 'ReduceLROnPlateau', 'lr_sched_params': {'mode': 'min', 'patience': 1, 'factor': 1e-1}} 
-{'optz': 'SGD', 'optz_params': {'lr': 0, 'momentum': 0.9, 'nesterov': True}, 'lr_sched': 'CyclicLR', 'lr_sched_params': {'base_lr': 1e-12, 'max_lr': 1e-2}} 
+{}
 
 parameters for python-dictionary 'data'
 - 
 {}
-#{'default_format_path': 'data/customer_chat_sample.csv', 'batch_size': 10, 'dataset_split': {'train': 80, 'val': 10, 'test': 10}} 
+#{'default_format_path': 'data/customer_chat_sample.csv', 'batch_size': {'train': 10, 'val': 10, 'test': 10}, 'dataset_split': {'train': 80, 'val': 10, 'test': 10}} 
 
 
 parameters for python-dictionary 'trainer'
 - 
 #{}
-{'gpus': 1, 'max_epochs': 6}
+{'gpus': 1, 'max_epochs': 2}
 
 
 parameters for python-dictionary 'model_init'. Contents of this dict are replaced by corresponding checkpoint dict 
 - 
-#{}
-{'model_type': 'bert'}
-#{'model_type': 'bert_large_uncased', 'tokenizer_type': 'bert'}
+{}
 
 
 parameters for python-dictionary 'ld_resume_chkpt'
 - 
-{'resume_from_checkpoint': 'tensorboard_logs/model_type=bert_large_uncased,tokenizer_type=bert/version_0/version_1/checkpoints/last.ckpt'}
+{'resume_from_checkpoint': 'tensorboard_logs/model_type=bert_large_uncased,tokenizer_type=bert/version_0/version_0/checkpoints/last.ckpt'}
