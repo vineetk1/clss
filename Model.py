@@ -6,7 +6,8 @@ from pytorch_lightning import LightningModule
 import torch
 from logging import getLogger
 from sys import exit
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Union, Tuple
+import pathlib
 from importlib import import_module
 import copy
 
@@ -51,7 +52,8 @@ class Model(LightningModule):
             logg.critical(strng)
             exit()
 
-    def params(self, optz_sched_params, app_specific):
+    def params(self, optz_sched_params: Dict[str, Any],
+               app_specific: Dict[Any, Any]) -> None:
         self.app_specific = app_specific
         self.optz_sched_params = optz_sched_params
         # Trainer('auto_lr_find': True...) requires self.lr
@@ -76,9 +78,9 @@ class Model(LightningModule):
                  logger=False)
         return loss
 
-    def training_epoch_end(self,
-                           training_step_outputs: List[Dict[str,
-                                                            torch.Tensor]]):
+    def training_epoch_end(
+            self, training_step_outputs: List[Dict[str,
+                                                   torch.Tensor]]) -> None:
         avg_loss = torch.stack([x['loss']
                                 for x in training_step_outputs]).mean()
         # on TensorBoard, want to see x-axis in epochs (not steps=batches)
@@ -97,7 +99,9 @@ class Model(LightningModule):
                  logger=False)
         return loss
 
-    def validation_epoch_end(self, val_step_outputs: List[torch.Tensor]):
+    def validation_epoch_end(
+            self, val_step_outputs: List[Union[torch.Tensor,
+                                               Dict[str, Any]]]) -> None:
         avg_loss = torch.stack(val_step_outputs).mean()
         # on TensorBoard, want to see x-axis in epochs (not steps=batches)
         self.logger.experiment.add_scalar('val_loss_epoch', avg_loss,
@@ -114,14 +118,16 @@ class Model(LightningModule):
                  logger=True)
         try:
             if self.statistics:
-                self._statistics_step(example_ids=batch['sentence_ids'],
-                                     predictions=torch.argmax(logits, dim=1),
-                                     actuals=batch['labels'].squeeze(1))
+                self._statistics_step(actuals=batch['labels'].squeeze(1),
+                                      predictions=torch.argmax(logits, dim=1),
+                                      example_ids=batch['sentence_ids'])
         except AttributeError:
             pass
         return loss
 
-    def test_epoch_end(self, test_step_outputs: List[torch.Tensor]):
+    def test_epoch_end(
+            self, test_step_outputs: List[Union[torch.Tensor,
+                                                Dict[str, Any]]]) -> None:
         avg_loss = torch.stack(test_step_outputs).mean()
         # on TensorBoard, want to see x-axis in epochs (not steps=batches)
         self.logger.experiment.add_scalar('test_loss_epoch', avg_loss,
@@ -132,7 +138,8 @@ class Model(LightningModule):
         except AttributeError:
             pass
 
-    def _run_model(self, batch: Dict[str, Any]) -> torch.Tensor:
+    def _run_model(self,
+                   batch: Dict[str, Any]) -> Tuple[torch.Tensor, torch.Tensor]:
         outputs = self.model(**batch['model_inputs'])
         pooled_output = outputs[1]
         pooled_output = self.classification_head_dropout(pooled_output)
@@ -199,10 +206,11 @@ class Model(LightningModule):
         elif 'optimizer' in locals():
             return optimizer
 
-    def clear_statistics(self):
+    def clear_statistics(self) -> None:
         self.statistics = False
 
-    def set_statistics(self, dataset_meta, dirPath: str):
+    def set_statistics(self, dataset_meta: Dict[str, Any],
+                       dirPath: pathlib.Path) -> None:
         self.statistics = True
         self.dataset_meta = dataset_meta
         self.dirPath = dirPath
@@ -211,11 +219,14 @@ class Model(LightningModule):
                                             num_classes,
                                             dtype=torch.int64)
 
-    def _statistics_step(self, example_ids, predictions, actuals):
+    def _statistics_step(self,
+                         predictions: torch.Tensor,
+                         actuals: torch.Tensor,
+                         example_ids: List[str] = None) -> None:
         for prediction, actual in zip(predictions, actuals):
             self.confusion_matrix[prediction, actual] += 1
 
-    def _statistics_end(self):
+    def _statistics_end(self) -> None:
         assert self.confusion_matrix.shape[0] == self.confusion_matrix.shape[1]
         epsilon = 1E-9
         precision = self.confusion_matrix.diag() / (
