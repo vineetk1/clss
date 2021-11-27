@@ -11,13 +11,15 @@ from Data import Data
 from Model import Model
 from ast import literal_eval
 from sys import argv
-from logging import getLogger
-from yaml import dump, full_load
-import utils.logging_config
 import collections.abc
 from pathlib import Path
+from yaml import dump, full_load
+from logging import getLogger
+from utils.log_configuration import LOG_CONFIG
+from logging.config import dictConfig
 
 logg = getLogger(__name__)
+dictConfig(LOG_CONFIG)
 
 
 def main():
