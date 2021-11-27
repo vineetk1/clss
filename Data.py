@@ -30,22 +30,22 @@ class Data(LightningDataModule):
 
     def prepare_data(self,
                      no_training: bool = False,
-                     no_testing: bool = False):
+                     no_testing: bool = False) -> None:
         self.dataset_metadata, train_data, val_data, test_data =\
             _get_trainValTest_data(
              data_file_path=self.d_params['default_format_path'],
              batch_size=self.d_params['batch_size'],
              split=self.d_params['dataset_split'])
         if not no_training:
-            self.train_data = Dataset(train_data)
-            self.valid_data = Dataset(val_data)
+            self.train_data = Data_set(train_data)
+            self.valid_data = Data_set(val_data)
         if not no_testing:
-            self.test_data = Dataset(test_data)
+            self.test_data = Data_set(test_data)
         if no_training and no_testing:
-            logg.info('No Training and no Testing')
+            logg.debug('No Training and no Testing')
 
     @staticmethod
-    def app_specific_params() -> Tuple[Dict, Dict]:
+    def app_specific_params() -> Tuple[Dict[Any, Any], Dict[Any, Any]]:
         app_specific_init, app_specific = {}, {}
         app_specific_init['num_classes'] = 8
         app_specific['num_classes'] = 8
@@ -125,7 +125,7 @@ class Data(LightningDataModule):
         }
 
 
-class Dataset(Dataset):
+class Data_set(Dataset):
     # example = sentence_id plus text plus label
     def __init__(self, examples: List[Dict[str, str]]):
         self.examples = examples
@@ -133,13 +133,14 @@ class Dataset(Dataset):
     def __len__(self) -> int:
         return len(self.examples)
 
-    def __getitem__(self, idx: int) -> List[Dict[str, str]]:
+    def __getitem__(self, idx: int) -> Dict[str, str]:
         return (self.examples[idx])
 
 
 def _get_trainValTest_data(
-        data_file_path: str, batch_size: Dict[str, int],
-        split: Dict[str, int]) -> Tuple[Dict[str, Any], List[Dict[str, str]]]:
+    data_file_path: str, batch_size: Dict[str, int], split: Dict[str, int]
+) -> Tuple[Dict[str, Any], List[Dict[str, str]], List[Dict[str, str]],
+           List[Dict[str, str]]]:
     assert split['train'] + split['val'] + split['test']
 
     df = pd.read_csv(data_file_path)
