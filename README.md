@@ -14,10 +14,10 @@ pip3 install pytorch-lightning
 pip3 install tensorboard
 pip3 install pandas
 pip3 install scikit-learn
-git clone https://github.com/vineetk1/classification.git
-cd classification
+git clone https://github.com/vineetk1/clss.git
+cd clss
 ```
-Note that the default directory is *classification*. Unless otherwise stated, all commands from the Command-Line-Interface must be delivered from the default directory.
+Note that the default directory is *clss*. Unless otherwise stated, all commands from the Command-Line-Interface must be delivered from the default directory.
 ## Download the dataset
 1. Make a *data* directory.      
 ```
