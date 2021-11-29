@@ -1,5 +1,4 @@
-# A Classification problem
-Use Bert to predict the classes.   
+# Classification using Deep Learning
 ## Requirements
 * PyTorch version >= 1.9.1+cu111
 * Python version >= 3.8.10
