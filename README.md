@@ -23,8 +23,8 @@ Note that the default directory is *clss*. Unless otherwise stated, all commands
 ```
 mkdir data
 ```
-2. Download *customer_chat_sample.csv* in the *data* directory.   
-Verify that the dataset is at *data/customer_chat_sample.csv*.   
+2. Download a dataset in the *data* directory.   
+Verify that the dataset is at *data* directory.    
 ## Run a model on CPUs or GPUs or TPUs
 The following line of the *input_param_files/bert_seq_class* file is configured to run a model on one GPU:   
 ```
