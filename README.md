@@ -38,36 +38,15 @@ Dueing testing, the results are sent to the standard-output, and also saved in t
 ## Resume training, validation, and testing a model with same hyper-parameters
 Resume training a checkpoint model with the same model- and training-states by using the following command:
 ```
-python3 Main.py input_param_files/gpt2_dstc2-resume_training
+python3 Main.py input_param_files/bert_seq_class-res_from_chkpt
 ```
-The user-settable hyper-parameters are in the file *input_param_files/gpt2_params-resume_training*.  An explanation on the contents of this file is at *input_param_files/README.md*.
+The user-settable hyper-parameters are in the file *input_param_files/bert_seq_class-res_from_chkpt*.  An explanation on the contents of this file is at *input_param_files/README.md*.
 ## Change hyper-parameters and continue training, validation, and testing a model
 Continue training a checkpoint model with the same model-state but different hyperparameters for the training-state by using the following command:
 ```
-python3 Main.py input_param_files/gpt2_dstc2-load_change_params
+python3 Main.py input_param_files/bert_seq_class-ld_chkpt
 ```
-The user-settable hyper-parameters are in the file *input_param_files/gpt2_dstc2-load_change_params*.  An explanation on the contents of this file is at *input_param_files/README.md*.
-
-
-
-
-
-
-
-## Run a model on CPUs or GPUs or TPUs
-The following line of the *input_param_files/bert_seq_class* file is configured to run a model on one GPU:   
-```
-{'gpus': 1, .......}
-```
-To run a model on a CPU or on multiple GPUs, change the value of the *gpus* parameter. For example, a value of 0 will run a model on a CPU. A value of 4 will run a model on four GPUs. To configure for a complex hardware, see the documentation at https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html    
-## Train, validate, and test a model
-Following command trains a model, saves the last checkpoint plus two checkpoints that have the lowest validation loss, runs the test dataset on the checkpointed model with the lowest validation loss, and outputs the results of the test:
-```
-python3 Main.py input_param_files/bert_seq_class
-```
-The user-settable hyper-parameters are in the file *python3 Main.py input_param_files/bert_seq_class*. An explanation on the contents of this file is at *input_param_files/README.md*. A list of all the hyper-parameters is in the <a href="https://www.pytorchlightning.ai" target="_blank">PyTorch-Lightning documentation</a>, and any hyper-parameter can be used.    
-As training progresses, graphs of *"training-loss vs. epoch #"*, *"validation-loss vs. epoch #"*, and "learning-rate vs. batch #" are plotted in real-time on the TensorBoard.  
-The results include the following: general information about the dataset and the classes, confusion matrix, precision, recall, f1, average f1, and weighted f1.   
+The user-settable hyper-parameters are in the file *input_param_filesbert_seq_class-ld_chkpt*.  An explanation on the contents of this file is at *input_param_files/README.md*.   
 ## Further test a checkpoint model with a new dataset
 1. Download a new dataset in the *data* directory.    
 1. Locate the checkpoint model to use for testing with a new dataset. The path is of a following form: tensorboard_logs/model_type=bert_seqClassification_large_uncased,tokenizer_type=bert/version_0/checkpoints/batch=10,optz=Adam,lr=2e-05,lr_sched=ReduceLROnPlateau,mode=min,patience=1,factor=0.1,epoch=02-val_loss=0.39129.ckpt   
