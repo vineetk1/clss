@@ -19,7 +19,7 @@ cd clss
 ```
 Note that the default directory is *clss*. Unless otherwise stated, all commands from the Command-Line-Interface must be delivered from the default directory.
 ## Download the dataset
-1. Make a *data* directory.      
+1. Create a *data* directory.      
 ```
 mkdir data
 ```
@@ -48,19 +48,8 @@ python3 Main.py input_param_files/bert_seq_class-ld_chkpt
 ```
 The user-settable hyper-parameters are in the file *input_param_filesbert_seq_class-ld_chkpt*.  An explanation on the contents of this file is at *input_param_files/README.md*.   
 ## Further test a checkpoint model with a new dataset
-1. Download a new dataset in the *data* directory.    
-1. Locate the checkpoint model to use for testing with a new dataset. The path is of a following form: tensorboard_logs/model_type=bert_seqClassification_large_uncased,tokenizer_type=bert/version_0/checkpoints/batch=10,optz=Adam,lr=2e-05,lr_sched=ReduceLROnPlateau,mode=min,patience=1,factor=0.1,epoch=02-val_loss=0.39129.ckpt   
-    1. The most recent trained model is in a subdirectory that has the highest version number. For example, version_0 is the first (i.e. oldest) trained model, version_1 is the second trained model, and so on.
-    1. The name of a checkpoint file includes the validation-loss. Pick the file that has the lowest validation loss (e.g. val_loss=0.39129).
-1. In the *input_param_files/bert_seq_class-test_only* file, replace the path of the checkpoint file.
+Test a checkpoint model by using the following command:
 ```
-{..............., 'chkpt': 'tensorboard_logs/model_type=bert_seqClassification_large_uncased,tokenizer_type=bert/version_0/checkpoints/batch=10,optz=Adam,lr=2e-05,lr_sched=ReduceLROnPlateau,mode=min,patience=1,factor=0.1,epoch=02-val_loss=0.39129.ckpt'}   
-```    
-4. In the *input_param_files/bert_seq_class-test_only* file, replace the name of the dataset file.
+python3 Main.py input_param_files/bert_seq_class-ld_chkpt_and_test
 ```
-{'default_format_path': 'data/test_file.csv', ............} 
-```
-5. Following command, on the command-line, tests the model with the new dataset:
-```
-python3 Main.py input_param_files/bert_seq_class-test_only 
-```
+The user-settable hyper-parameters are in the file *input_param_files/bert_seq_class-ld_chkpt_and_test*.  An explanation on the contents of this file is at *input_param_files/README.md*.
