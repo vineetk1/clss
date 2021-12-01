@@ -200,6 +200,7 @@ def main():
         # Training: False, Testing: False
         logg.critical('Bug in the Logic')
         exit()
+    logg.info(f"Results and other information is at the directory: {dirPath}")
 
 
 if __name__ == '__main__':
