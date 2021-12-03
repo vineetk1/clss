@@ -37,6 +37,13 @@ class Model(LightningModule):
                 mean=0.0, std=self.model.config.initializer_range)
             if self.classification_head.bias is not None:
                 self.classification_head.bias.data.zero_()
+            if 'imbalanced_classes' in app_specific_init and app_specific_init['imbalanced_classes']:
+                weights = torch.tensor(app_specific_init['imbalanced_classes'])
+                weights = 1.0 / weights
+                weights = weights / weights.sum()
+                self.loss_fct = torch.nn.CrossEntropyLoss(weight=weights)
+            else:
+                self.loss_fct = torch.nn.CrossEntropyLoss()
         else:
             strng = ('unknown model_type: ' f'{model_init["model_type"]}')
             logg.critical(strng)
@@ -140,13 +147,13 @@ class Model(LightningModule):
 
     def _run_model(self,
                    batch: Dict[str, Any]) -> Tuple[torch.Tensor, torch.Tensor]:
-        outputs = self.model(**batch['model_inputs'])
+        outputs = self.model(**batch['model_inputs'],
+                             output_hidden_states=True)
         pooled_output = outputs[1]
         pooled_output = self.classification_head_dropout(pooled_output)
         logits = self.classification_head(pooled_output)
-        loss_fct = torch.nn.CrossEntropyLoss()
-        loss = loss_fct(logits.view(-1, self.app_specific['num_classes']),
-                        batch['labels'].view(-1))
+        loss = self.loss_fct(logits.view(-1, self.app_specific['num_classes']),
+                             batch['labels'].view(-1))
         return loss, logits
         # [0] => mean of losses from each example in batch; [1] => logits
         # return outputs[0], outputs[1]
