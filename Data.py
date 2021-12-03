@@ -48,6 +48,10 @@ class Data(LightningDataModule):
     def app_specific_params() -> Tuple[Dict[Any, Any], Dict[Any, Any]]:
         app_specific_init, app_specific = {}, {}
         app_specific_init['num_classes'] = 8
+        app_specific_init['imbalanced_classes'] = [
+            0.3030, 0.2167, 0.1460, 0.1061, 0.0925, 0.0650, 0.0567, 0.0140
+        ]
+
         app_specific['num_classes'] = 8
         return app_specific_init, app_specific
 
