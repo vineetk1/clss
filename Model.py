@@ -37,7 +37,8 @@ class Model(LightningModule):
                 mean=0.0, std=self.model.config.initializer_range)
             if self.classification_head.bias is not None:
                 self.classification_head.bias.data.zero_()
-            if 'imbalanced_classes' in app_specific_init and app_specific_init['imbalanced_classes']:
+            if 'imbalanced_classes' in app_specific_init and app_specific_init[
+                    'imbalanced_classes']:
                 weights = torch.tensor(app_specific_init['imbalanced_classes'])
                 weights = 1.0 / weights
                 weights = weights / weights.sum()
@@ -149,9 +150,18 @@ class Model(LightningModule):
                    batch: Dict[str, Any]) -> Tuple[torch.Tensor, torch.Tensor]:
         outputs = self.model(**batch['model_inputs'],
                              output_hidden_states=True)
-        pooled_output = outputs[1]
-        pooled_output = self.classification_head_dropout(pooled_output)
-        logits = self.classification_head(pooled_output)
+        output = outputs[1]
+        # get last 4 layers;
+        # shape is torch.Size([# layer = 4, # batches, # tokens, # features]);
+        # last layer's index is 3,  which is the output layer
+        # output = torch.stack(outputs[2][-4:])
+        # output is a mean of 4 layers and mean of tokens
+        # output = (output.mean(0)).mean(1)
+        # output is a cat of features and mean of tokens
+        # output = torch.cat((output[0], output[1], output[2], output[3]),
+        #                   2).mean(1)
+        output = self.classification_head_dropout(output)
+        logits = self.classification_head(output)
         loss = self.loss_fct(logits.view(-1, self.app_specific['num_classes']),
                              batch['labels'].view(-1))
         return loss, logits
